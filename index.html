@@ -1992,8 +1992,8 @@
                 state.cache.chest = data.chest;
             }
 
-            if ("trigger_ttload" in data && data.trigger_ttload !== state.lastTrigger) {
-                state.lastTrigger = data.trigger_ttload;
+            if ("trigger_circle" in data && data.trigger_circle !== state.lastTrigger) {
+                state.lastTrigger = data.trigger_circle;
                 setLoaderArmed(!state.loaderArmed);
             }
 
