@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TT XP Calculator</title>
+    <style>
+        :root {
+            --bg: #0c1118;
+            --panel: #111923;
+            --panel-2: #0f1620;
+            --border: #263447;
+            --border-soft: #1d2938;
+            --text: #eef4fb;
+            --muted: #8f9bad;
+            --blue: #4d8dff;
+            --blue-2: #2f6ee8;
+            --orange: #f39a2d;
+            --green: #39d17d;
+            --purple: #b35cff;
+            --yellow: #f6ca32;
+            --red: #ff5d5d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+            color: var(--text);
+            font-family: Inter, Arial, Helvetica, sans-serif;
+            user-select: none;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        #app {
+            position: fixed;
+            left: 40px;
+            top: 40px;
+            width: 980px;
+            height: 720px;
+            min-width: 760px;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #2f5fa6;
+            border-radius: 10px;
+            background:
+                radial-gradient(circle at top right, rgba(52, 104, 188, 0.12), transparent 34%),
+                linear-gradient(180deg, rgba(14, 21, 31, 0.98), rgba(8, 13, 20, 0.99));
+            box-shadow: 0 18px 55px rgba(0, 0, 0, 0.55);
+        }
+
+        #titlebar {
+            height: 58px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--border-soft);
+            cursor: move;
+            background: rgba(14, 21, 31, 0.96);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            min-width: 0;
+        }
+
+        .logo {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            display: grid;
+            place-items: center;
+            font-weight: 900;
+            font-style: italic;
+            color: white;
+            background: linear-gradient(135deg, #4e93ff, #285ac0);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+        }
+
+        .brand-title {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: .01em;
+        }
+
+        .window-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: #182231;
+            color: var(--text);
+            padding: 8px 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #202d3f;
+        }
+
+        #closeBtn {
+            width: 46px;
+            color: white;
+            background: #9d2d2d;
+            border-color: #b43838;
+            font-size: 18px;
+        }
+
+        #closeBtn:hover {
+            background: #b33535;
+        }
+
+        #main {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .tab {
+            min-width: 170px;
+            padding: 11px 18px;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            background: #151e29;
+        }
+
+        .tab.active[data-mode="fish"] {
+            background: linear-gradient(180deg, #4b8fff, #2f6ee8);
+            border-color: #5c9aff;
+        }
+
+        .tab.active[data-mode="bear"] {
+            background: linear-gradient(180deg, #a86417, #73400d);
+            border-color: #c4781f;
+            color: #ffd29b;
+        }
+
+
+        .tab.active[data-page="loader"] {
+            background: linear-gradient(180deg, #318b59, #21643f);
+            border-color: #43a86e;
+            color: #d8ffe8;
+        }
+
+        .loader-workspace {
+            display: none;
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+        }
+
+        .loader-workspace.active {
+            display: block;
+        }
+
+        .loader-page-panel {
+            min-height: 100%;
+            margin-bottom: 0;
+        }
+
+        .loader-inner {
+            margin-top: 12px;
+        }
+
+        .loader-stock-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .workspace {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+            gap: 10px;
+        }
+
+        .column {
+            min-width: 0;
+            min-height: 0;
+            overflow: auto;
+            padding-right: 2px;
+        }
+
+        .panel {
+            border: 1px solid var(--border-soft);
+            border-radius: 8px;
+            background: rgba(17, 25, 35, 0.88);
+            padding: 13px;
+            margin-bottom: 10px;
+        }
+
+        .panel-title {
+            margin: 0 0 12px;
+            color: var(--blue);
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .auto-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .input-grid,
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .auto-card,
+        .result-card {
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: rgba(11, 17, 25, .75);
+            padding: 12px;
+        }
+
+        .auto-label,
+        .result-label,
+        .field label {
+            display: block;
+            color: #b7c2d1;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 7px;
+        }
+
+        .auto-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--blue);
+            overflow-wrap: anywhere;
+        }
+
+        .field {
+            min-width: 0;
+        }
+
+        input,
+        select {
+            width: 100%;
+            height: 38px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #0c121a;
+            color: var(--text);
+            padding: 8px 10px;
+            outline: none;
+            user-select: text;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #4d7fbe;
+        }
+
+        .hint {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .toggle-wrap {
+            height: 38px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle {
+            position: relative;
+            width: 80px;
+            height: 32px;
+            border-radius: 18px;
+            border: 1px solid #355f9d;
+            background: #182536;
+            cursor: pointer;
+        }
+
+        .toggle::before {
+            content: "";
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #eef4fb;
+            transition: .16s ease;
+        }
+
+        .toggle span {
+            position: absolute;
+            right: 12px;
+            top: 7px;
+            color: #aab5c4;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .toggle.on {
+            background: linear-gradient(180deg, #4b8fff, #2f6ee8);
+        }
+
+        .toggle.on::before {
+            left: 51px;
+        }
+
+        .toggle.on span {
+            left: 12px;
+            right: auto;
+            color: white;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1.4fr .8fr;
+            gap: 10px;
+        }
+
+        .primary {
+            background: linear-gradient(180deg, #4b8fff, #2f6ee8);
+            border-color: #5798ff;
+            font-size: 14px;
+        }
+
+        .secondary {
+            background: #252f3d;
+        }
+
+        .results-panel {
+            margin-bottom: 10px;
+        }
+
+        .result-card {
+            min-height: 105px;
+        }
+
+        .result-value {
+            font-size: 22px;
+            font-weight: 900;
+            overflow-wrap: anywhere;
+        }
+
+        .blue { color: var(--blue); }
+        .purple { color: var(--purple); }
+        .green { color: var(--green); }
+        .orange { color: var(--orange); }
+        .yellow { color: var(--yellow); }
+        .red { color: var(--red); }
+
+        .result-sub {
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .details {
+            margin: 0;
+            padding-left: 18px;
+            color: #aab5c4;
+            font-size: 12px;
+            line-height: 1.65;
+        }
+
+        #warning {
+            display: none;
+            margin-top: 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 93, 93, .4);
+            background: rgba(255, 93, 93, .08);
+            color: #ff9d9d;
+            font-size: 12px;
+        }
+
+
+
+        .source-toggle {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 7px;
+        }
+
+        .source-toggle button {
+            flex: 1;
+            padding: 6px 8px;
+            font-size: 11px;
+            background: #141d29;
+        }
+
+        .source-toggle button.active {
+            background: #244f91;
+            border-color: #3f78c9;
+            color: #fff;
+        }
+
+        .auto-readout {
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #0c121a;
+            color: var(--blue);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .auto-readout.waiting {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .loader-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .check-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 38px;
+            color: #c5cfdb;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .check-row input {
+            width: 17px;
+            height: 17px;
+            flex: 0 0 auto;
+        }
+
+        .loader-summary {
+            margin-top: 10px;
+            padding: 9px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #0c121a;
+            color: #aeb9c8;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .loader-status {
+            margin-top: 10px;
+            padding: 9px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: rgba(77, 141, 255, .08);
+            color: #b8c9df;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .loader-status.armed {
+            border-color: rgba(57, 209, 125, .45);
+            background: rgba(57, 209, 125, .08);
+            color: #9ee8bf;
+        }
+
+        .loader-status.error {
+            border-color: rgba(255, 93, 93, .45);
+            background: rgba(255, 93, 93, .08);
+            color: #ffaaaa;
+        }
+
+        .loader-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .loader-buttons .arm {
+            background: linear-gradient(180deg, #2ca968, #21834f);
+            border-color: #36be78;
+        }
+
+        .loader-buttons .arm.armed {
+            background: linear-gradient(180deg, #ca8a2b, #9b6218);
+            border-color: #d89a3b;
+        }
+
+        .small-value {
+            color: var(--blue);
+            font-weight: 800;
+        }
+
+        #footer {
+            height: 34px;
+            flex-shrink: 0;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--muted);
+            font-size: 11px;
+            border-top: 1px solid var(--border-soft);
+            background: rgba(10, 15, 22, .95);
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #596373;
+        }
+
+        .status.connected .dot {
+            background: var(--green);
+            box-shadow: 0 0 8px rgba(57, 209, 125, .55);
+        }
+
+        .status.connected #statusText {
+            color: #c7d2de;
+        }
+
+        #resizeHandle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 22px;
+            height: 22px;
+            cursor: nwse-resize;
+            z-index: 5;
+        }
+
+        #resizeHandle::after {
+            content: "";
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 10px;
+            height: 10px;
+            border-right: 2px solid #4f7db7;
+            border-bottom: 2px solid #4f7db7;
+        }
+
+
+        #app {
+            width: 900px;
+            height: 620px;
+            min-width: 700px;
+            min-height: 500px;
+            border-radius: 9px;
+        }
+
+        #titlebar {
+            height: 48px;
+            padding: 0 11px;
+        }
+
+        .brand {
+            gap: 9px;
+        }
+
+        .logo {
+            width: 27px;
+            height: 27px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .brand-title {
+            font-size: 16px;
+            line-height: 1.05;
+        }
+
+        .brand-subtitle {
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .window-actions {
+            gap: 6px;
+        }
+
+        button {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        #closeBtn {
+            width: 38px;
+            padding: 4px 8px;
+            font-size: 17px;
+        }
+
+        #main {
+            padding: 8px;
+            gap: 7px;
+        }
+
+        .tabs {
+            gap: 6px;
+        }
+
+        .tab {
+            min-width: 125px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .workspace {
+            gap: 8px;
+        }
+
+        .column {
+            padding-right: 1px;
+        }
+
+        .panel {
+            padding: 9px;
+            margin-bottom: 8px;
+            border-radius: 7px;
+        }
+
+        .panel-title {
+            margin-bottom: 8px;
+            font-size: 11px;
+            letter-spacing: .06em;
+        }
+
+        .auto-grid,
+        .input-grid,
+        .results-grid,
+        .loader-stock-grid,
+        .loader-grid {
+            gap: 7px;
+        }
+
+        .auto-card,
+        .result-card {
+            padding: 8px 9px;
+            border-radius: 6px;
+        }
+
+        .auto-label,
+        .result-label,
+        .field label {
+            margin-bottom: 4px;
+            font-size: 10px;
+        }
+
+        .auto-value {
+            font-size: 17px;
+        }
+
+        input,
+        select {
+            height: 32px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .hint,
+        .result-sub {
+            margin-top: 3px;
+            font-size: 9px;
+            line-height: 1.25;
+        }
+
+        .source-toggle {
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .source-toggle button {
+            padding: 4px 6px;
+            font-size: 9px;
+        }
+
+        .auto-readout {
+            min-height: 32px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .actions {
+            gap: 7px;
+        }
+
+        .primary {
+            font-size: 12px;
+        }
+
+        .result-card {
+            min-height: 72px;
+        }
+
+        .result-value {
+            font-size: 18px;
+            line-height: 1.1;
+        }
+
+        #warning {
+            margin-top: 7px;
+            padding: 6px 8px;
+            font-size: 10px;
+        }
+
+        .loader-inner {
+            margin-top: 8px;
+        }
+
+        .check-row {
+            min-height: 32px;
+            gap: 6px;
+            font-size: 10px;
+        }
+
+        .check-row input {
+            width: 15px;
+            height: 15px;
+        }
+
+        .loader-summary,
+        .loader-status {
+            margin-top: 7px;
+            padding: 7px 8px;
+            font-size: 10px;
+            line-height: 1.35;
+        }
+
+        .loader-buttons {
+            gap: 6px;
+            margin-top: 7px;
+        }
+
+        #footer {
+            height: 27px;
+            padding: 0 10px;
+            font-size: 9px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+        }
+
+        .results-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .loader-page-panel {
+            min-height: auto;
+        }
+
+        @media (min-width: 1050px) {
+            .loader-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 840px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .tab {
+                min-width: 105px;
+                flex: 1;
+            }
+
+            .tabs {
+                width: 100%;
+            }
+
+            .loader-stock-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="titlebar">
+            <div class="brand">
+                <div class="logo">TT</div>
+                <div><div class="brand-title">TT XP Calculator</div><div class="brand-subtitle">Fish • Bear • Loader</div></div>
+            </div>
+
+            <div class="window-actions">
+                <button id="pinBtn">📌 Pin</button>
+                <button id="parkBtn">▾ Hide</button>
+                <button id="closeBtn">×</button>
+            </div>
+        </div>
+
+        <div id="main">
+            <div class="tabs">
+                <button class="tab active" data-mode="fish">🐟 Fish XP</button>
+                <button class="tab" data-mode="bear">🐻 Bear XP</button>
+                <button class="tab" data-page="loader">🚛 Loader</button>
+            </div>
+
+            <div class="workspace" id="calcWorkspace">
+                <div class="column">
+                    <div class="panel">
+                        <div class="panel-title">Automatic (from TT)</div>
+
+                        <div class="auto-grid">
+                            <div class="auto-card">
+                                <span class="auto-label" id="autoXpLabel">Current Fish XP</span>
+                                <div class="auto-value" id="currentXpDisplay">0</div>
+                            </div>
+
+                            <div class="auto-card">
+                                <span class="auto-label" id="autoBxpLabel">Fishing BXP Available</span>
+                                <div class="auto-value" id="bxpDisplay">0</div>
+                            </div>
+
+                            <div class="auto-card">
+                                <span class="auto-label" id="autoStockLabel">Fish Detected in Storage</span>
+                                <div class="auto-value" id="detectedStockDisplay">0</div>
+                                <div class="hint" id="storageCount">Open a storage to scan it.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-title">Inputs</div>
+
+                        <div class="input-grid">
+                            <div class="field">
+                                <label for="target">Target</label>
+                                <select id="target">
+                                    <option value="25250">Level 100 — 25,250 XP</option>
+                                    <option value="1000000" selected>1M XP — Level 632</option>
+                                    <option value="10000000">10M XP — Level 2000</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label>Use BXP?</label>
+                                <div class="toggle-wrap">
+                                    <div id="useBonusToggle" class="toggle on">
+                                        <span>Yes</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label>Base XP Bonus (%)</label>
+                                <div class="source-toggle">
+                                    <button type="button" id="baseAutoBtn" class="active">Auto</button>
+                                    <button type="button" id="baseManualBtn">Manual</button>
+                                </div>
+                                <div id="baseAutoValue" class="auto-readout waiting">Open M → Identity</div>
+                                <input id="baseXp" type="number" step="0.1" min="0" value="0" style="display:none;">
+                                <div class="hint" id="baseXpHint">Detected from Identity → Experience.</div>
+                            </div>
+
+                            <div class="field">
+                                <label for="bxpOverride">BXP Amount (optional)</label>
+                                <input id="bxpOverride" type="number" step="1" min="0" placeholder="Use detected BXP">
+                                <div class="hint">Leave empty to use your detected BXP balance.</div>
+                            </div>
+
+                            <div class="field">
+                                <label>Skill of the Day</label>
+                                <div class="source-toggle">
+                                    <button type="button" id="sotdAutoBtn" class="active">Auto</button>
+                                    <button type="button" id="sotdManualBtn">Manual</button>
+                                </div>
+                                <div id="sotdAutoValue" class="auto-readout waiting">Open M → Identity</div>
+                                <input id="sotdBonus" type="number" step="0.1" min="0" value="0" style="display:none;">
+                                <div class="hint" id="sotdHint">Auto applies only when SOTD matches this calculator.</div>
+                            </div>
+
+                            <div class="field">
+                                <label id="stockLabel" for="stock">Stock Override (optional)</label>
+                                <input id="stock" type="number" step="1" min="0" placeholder="Use detected storage total">
+                                <div class="hint" id="stockHint">Leave empty to use stock detected from opened storages.</div>
+                            </div>
+                        </div>
+
+                        <div id="warning"></div>
+                    </div>
+
+                    <div class="actions">
+                        <button id="calculateBtn" class="primary">🧮 Calculate</button>
+                        <button id="resetBtn" class="secondary">↻ Reset</button>
+                    </div>
+
+                    
+
+                </div>
+
+                <div class="column">
+                    <div class="panel results-panel">
+                        <div class="panel-title">Results</div>
+
+                        <div class="results-grid">
+                            <div class="result-card">
+                                <span class="result-label">Target XP</span>
+                                <div class="result-value" id="targetResult">1,000,000</div>
+                            </div>
+
+                            <div class="result-card">
+                                <span class="result-label">Current XP</span>
+                                <div class="result-value blue" id="currentResult">0</div>
+                            </div>
+
+                            <div class="result-card">
+                                <span class="result-label">XP Remaining</span>
+                                <div class="result-value purple" id="xpRemaining">0</div>
+                            </div>
+
+                            <div class="result-card">
+                                <span class="result-label" id="totalResourceLabel">Total Fish Needed</span>
+                                <div class="result-value blue" id="totalResource">0</div>
+                                <div class="result-sub" id="resourceSub"></div>
+                            </div>
+
+                            <div class="result-card">
+                                <span class="result-label" id="stillNeededLabel">Fish Still Needed</span>
+                                <div class="result-value green" id="stillNeeded">0</div>
+                                <div class="result-sub">After your current stock.</div>
+                            </div>
+
+                            <div class="result-card">
+                                <span class="result-label">BXP Available</span>
+                                <div class="result-value orange" id="bxpResult">0</div>
+                            </div>
+
+                            <div class="result-card">
+                                <span class="result-label">Total BXP Needed</span>
+                                <div class="result-value yellow" id="totalBxp">0</div>
+                                <div class="result-sub">If using BXP for the full remaining grind.</div>
+                            </div>
+
+                            <div class="result-card">
+                                <span class="result-label">BXP Still Needed</span>
+                                <div class="result-value red" id="bxpNeeded">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loader-workspace" id="loaderWorkspace">
+                <div class="panel loader-page-panel">
+                    <div class="panel-title">Storage Auto Loader</div>
+
+                    <div class="loader-stock-grid">
+                        <div class="auto-card">
+                            <span class="auto-label" id="loaderItemLabel">Selected Item</span>
+                            <div class="auto-value" id="loaderItemValue">Fish Meat</div>
+                        </div>
+
+                        <div class="auto-card">
+                            <span class="auto-label">Detected in Scanned Storages</span>
+                            <div class="auto-value" id="loaderStockValue">0</div>
+                        </div>
+
+                        <div class="auto-card">
+                            <span class="auto-label">Calculator Still Needs</span>
+                            <div class="auto-value" id="loaderNeededValue">0</div>
+                        </div>
+                    </div>
+
+<div class="loader-inner">
+                        
+
+                        <div class="loader-grid">
+                            <div class="field">
+                                <label for="trailerSelect">Trailer</label>
+                                <select id="trailerSelect">
+                                    <option value="">None</option>
+                                    <option value="mk1">MK1 — 400 kg</option>
+                                    <option value="mk2">MK2 — 475 kg</option>
+                                    <option value="mk3">MK3 — 600 kg</option>
+                                    <option value="mk4">MK4 — 775 kg</option>
+                                    <option value="mk5">MK5 — 1,000 kg</option>
+                                    <option value="mk6">MK6 — 1,500 kg</option>
+                                    <option value="mk7">MK7 — 2,200 kg</option>
+                                    <option value="mk8">MK8 — 2,500 kg</option>
+                                    <option value="mk9">MK9 — 2,750 kg</option>
+                                    <option value="mk10">MK10 — 3,000 kg</option>
+                                    <option value="mk11">MK11 — 3,500 kg</option>
+                                    <option value="mk12">MK12 — 5,000 kg</option>
+                                    <option value="mk13">MK13 — 8,500 kg</option>
+                                    <option value="mk14">MK14 — 9,000 kg</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label>MK15 Chernobog Toter</label>
+                                <div class="check-row">
+                                    <input id="mk15" type="checkbox">
+                                    <span>Also load MK15 trunk (6,000 kg)</span>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label>Premium</label>
+                                <div class="check-row">
+                                    <input id="premium" type="checkbox">
+                                    <span>+15% vehicle storage</span>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label>Farmer's Milk</label>
+                                <div class="check-row">
+                                    <input id="farmersMilk" type="checkbox">
+                                    <span>+20% vehicle storage</span>
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label>PostOP Perk</label>
+                                <div class="check-row">
+                                    <input id="postop" type="checkbox">
+                                    <span>+15% vehicle storage</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="loader-summary" id="loaderSummary">
+                            Select a trailer or MK15 to see the load capacity.
+                        </div>
+
+                        <div class="loader-buttons">
+                            <button id="armLoaderBtn" class="arm">Arm Auto Loader</button>
+                            <button id="clearStorageBtn">Clear Scanned Storages</button>
+                        </div>
+
+                        <div class="loader-status" id="loaderStatus">
+                            Keybind trigger: <strong>userapp_trigger ttload</strong>. Arm it, then open the storage containing the selected meat.
+                        </div>
+
+                        <div class="loader-status" id="keybindDebugStatus">
+                            <strong>Keybind debug:</strong> Waiting for a trigger...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="footer">
+            <div id="status" class="status">
+                <span class="dot"></span>
+                <span id="statusText">Waiting for game data...</span>
+            </div>
+
+            <span id="lastUpdated">Not updated yet</span>
+            <span>Created by Cian | TT Tools</span>
+        </div>
+
+        <div id="resizeHandle"></div>
+    </div>
+
+    <script>
+        const app = document.getElementById("app");
+        const titlebar = document.getElementById("titlebar");
+        const resizeHandle = document.getElementById("resizeHandle");
+        const parkBtn = document.getElementById("parkBtn");
+        const calcWorkspace = document.getElementById("calcWorkspace");
+        const loaderWorkspace = document.getElementById("loaderWorkspace");
+
+        const target = document.getElementById("target");
+        const baseXp = document.getElementById("baseXp");
+        const sotdBonus = document.getElementById("sotdBonus");
+        const baseAutoBtn = document.getElementById("baseAutoBtn");
+        const baseManualBtn = document.getElementById("baseManualBtn");
+        const baseAutoValue = document.getElementById("baseAutoValue");
+        const baseXpHint = document.getElementById("baseXpHint");
+        const sotdAutoBtn = document.getElementById("sotdAutoBtn");
+        const sotdManualBtn = document.getElementById("sotdManualBtn");
+        const sotdAutoValue = document.getElementById("sotdAutoValue");
+        const bxpOverride = document.getElementById("bxpOverride");
+        const stock = document.getElementById("stock");
+        const toggle = document.getElementById("useBonusToggle");
+
+        const currentXpDisplay = document.getElementById("currentXpDisplay");
+        const bxpDisplay = document.getElementById("bxpDisplay");
+        const autoXpLabel = document.getElementById("autoXpLabel");
+        const autoBxpLabel = document.getElementById("autoBxpLabel");
+        const autoStockLabel = document.getElementById("autoStockLabel");
+        const detectedStockDisplay = document.getElementById("detectedStockDisplay");
+        const storageCount = document.getElementById("storageCount");
+
+        const trailerSelect = document.getElementById("trailerSelect");
+        const mk15 = document.getElementById("mk15");
+        const premium = document.getElementById("premium");
+        const farmersMilk = document.getElementById("farmersMilk");
+        const postop = document.getElementById("postop");
+        const loaderSummary = document.getElementById("loaderSummary");
+        const loaderItemLabel = document.getElementById("loaderItemLabel");
+        const loaderItemValue = document.getElementById("loaderItemValue");
+        const loaderStockValue = document.getElementById("loaderStockValue");
+        const loaderNeededValue = document.getElementById("loaderNeededValue");
+        const loaderStatus = document.getElementById("loaderStatus");
+        const armLoaderBtn = document.getElementById("armLoaderBtn");
+
+        const targetResult = document.getElementById("targetResult");
+        const currentResult = document.getElementById("currentResult");
+        const xpRemainingEl = document.getElementById("xpRemaining");
+        const totalResourceLabel = document.getElementById("totalResourceLabel");
+        const totalResource = document.getElementById("totalResource");
+        const resourceSub = document.getElementById("resourceSub");
+        const stillNeededLabel = document.getElementById("stillNeededLabel");
+        const stillNeeded = document.getElementById("stillNeeded");
+        const bxpResult = document.getElementById("bxpResult");
+        const totalBxpEl = document.getElementById("totalBxp");
+        const bxpNeededEl = document.getElementById("bxpNeeded");
+
+        const stockLabel = document.getElementById("stockLabel");
+        const stockHint = document.getElementById("stockHint");
+        const sotdHint = document.getElementById("sotdHint");
+        const warning = document.getElementById("warning");
+        const status = document.getElementById("status");
+        const statusText = document.getElementById("statusText");
+        const lastUpdated = document.getElementById("lastUpdated");
+
+        const state = {
+            mode: "fish",
+            useBxp: true,
+            inventory: {},
+            fishingXp: 0,
+            huntingXp: 0,
+            baseXpMode: "auto",
+            sotdMode: "auto",
+            detectedBaseXp: null,
+            detectedSotdSkill: "",
+            detectedSotdBonus: null,
+            scannedStorages: {},
+            loaderArmed: false,
+            autoLoading: false,
+            lastTrigger: null,
+            cache: {
+                menu: "",
+                menu_open: false,
+                menu_choices: [],
+                prompt: false,
+                chest: null
+            }
+        };
+
+        const trailers = {
+            mk1:  { name: "MK1",  id: "trailerswb",   size: 400 },
+            mk2:  { name: "MK2",  id: "trailers",     size: 475 },
+            mk3:  { name: "MK3",  id: "trailerlogs2", size: 600 },
+            mk4:  { name: "MK4",  id: "botdumptr",    size: 775 },
+            mk5:  { name: "MK5",  id: "drybulktr",    size: 1000 },
+            mk6:  { name: "MK6",  id: "dumptr",       size: 1500 },
+            mk7:  { name: "MK7",  id: "docktrailer2", size: 2200 },
+            mk8:  { name: "MK8",  id: "docktrailer",  size: 2500 },
+            mk9:  { name: "MK9",  id: "trailers2",    size: 2750 },
+            mk10: { name: "MK10", id: "trailerswb2",  size: 3000, vrpName: "Refrigerated Trailer (MK10) (trailerswb2)" },
+            mk11: { name: "MK11", id: "tvtrailer",    size: 3500, vrpName: "Trailer (tvtrailer)" },
+            mk12: { name: "MK12", id: "tvtrailer2",   size: 5000, vrpName: "Trailer (tvtrailer2)" },
+            mk13: { name: "MK13", id: "boxlongtr",    size: 8500, vrpName: "Box Trailer (MK13) (boxlongtr)" },
+            mk14: { name: "MK14", id: "trailerlarge", size: 9000, vrpName: "Mobile Operations Center (MK14) (trailerlarge)" },
+            mk15: { name: "MK15", id: "mk15",         size: 6000, vrpName: "Chernobog Toter (mk15)" }
+        };
+
+        function send(payload) {
+            window.parent.postMessage(payload, "*");
+        }
+
+        function num(value, fallback = 0) {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : fallback;
+        }
+
+        function fmt(value, maxDecimals = 3) {
+            return num(value).toLocaleString(undefined, {
+                maximumFractionDigits: maxDecimals
+            });
+        }
+
+        function parseInventory(raw) {
+            if (!raw) return {};
+
+            if (typeof raw === "object") {
+                return raw;
+            }
+
+            if (typeof raw === "string") {
+                try {
+                    return JSON.parse(raw);
+                } catch {}
+            }
+
+            return {};
+        }
+
+        function inventoryAmount(key) {
+            const item = state.inventory[key];
+
+            if (item === undefined || item === null) return 0;
+
+            if (typeof item === "object" && "amount" in item) {
+                return num(item.amount);
+            }
+
+            return num(item);
+        }
+
+        function detectedBxp() {
+            return state.mode === "bear"
+                ? inventoryAmount("exp_token_a|hunting|skill")
+                : inventoryAmount("exp_token_a|farming|fishing");
+        }
+
+        function selectedBxp() {
+            const raw = bxpOverride.value.trim();
+            return raw === "" ? detectedBxp() : Math.max(num(raw), 0);
+        }
+
+        function currentXp() {
+            return state.mode === "bear" ? state.huntingXp : state.fishingXp;
+        }
+
+
+
+        function decodeHtml(value) {
+            const el = document.createElement("textarea");
+            el.innerHTML = String(value ?? "");
+            return el.value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        }
+
+        function findExperienceDescription(choices) {
+            for (const choice of choices ?? []) {
+                if (!Array.isArray(choice) || choice.length < 2) continue;
+
+                const name = decodeHtml(choice[0]).toLowerCase();
+                if (name === "experience") {
+                    return decodeHtml(choice[1]);
+                }
+            }
+
+            return "";
+        }
+
+        function parseIdentityExperience(choices) {
+            const text = findExperienceDescription(choices);
+            if (!text) return false;
+
+            const baseMatch = text.match(/Base Experience Bonus:\s*([0-9]+(?:\.[0-9]+)?)\s*%/i);
+            const sotdMatch = text.match(/Skill of the Day:\s*([0-9]+(?:\.[0-9]+)?)\s*%\s*bonus to\s*([A-Za-z0-9 _-]+)/i);
+
+            let changed = false;
+
+            if (baseMatch) {
+                state.detectedBaseXp = Number(baseMatch[1]);
+                changed = true;
+            }
+
+            if (sotdMatch) {
+                state.detectedSotdBonus = Number(sotdMatch[1]);
+                state.detectedSotdSkill = sotdMatch[2].trim();
+                changed = true;
+            }
+
+            if (changed) {
+                updateXpSources();
+            }
+
+            return changed;
+        }
+
+        function sotdMatchesMode() {
+            const skill = state.detectedSotdSkill.trim().toLowerCase();
+
+            if (state.mode === "fish") {
+                return skill === "fishing";
+            }
+
+            // Transport Tycoon exposes the Hunting job/skill as "skill" in several data keys.
+            return skill === "hunting" || skill === "skill";
+        }
+
+        function selectedBaseXp() {
+            if (state.baseXpMode === "manual") {
+                return Math.max(num(baseXp.value), 0);
+            }
+
+            return state.detectedBaseXp ?? 0;
+        }
+
+        function selectedSotdBonus() {
+            if (state.sotdMode === "manual") {
+                return Math.max(num(sotdBonus.value), 0);
+            }
+
+            if (state.detectedSotdBonus === null || !sotdMatchesMode()) {
+                return 0;
+            }
+
+            return state.detectedSotdBonus;
+        }
+
+        function setSourceMode(type, mode) {
+            if (type === "base") {
+                state.baseXpMode = mode;
+                baseAutoBtn.classList.toggle("active", mode === "auto");
+                baseManualBtn.classList.toggle("active", mode === "manual");
+                baseAutoValue.style.display = mode === "auto" ? "flex" : "none";
+                baseXp.style.display = mode === "manual" ? "block" : "none";
+            } else {
+                state.sotdMode = mode;
+                sotdAutoBtn.classList.toggle("active", mode === "auto");
+                sotdManualBtn.classList.toggle("active", mode === "manual");
+                sotdAutoValue.style.display = mode === "auto" ? "flex" : "none";
+                sotdBonus.style.display = mode === "manual" ? "block" : "none";
+            }
+
+            updateXpSources();
+            recalc();
+        }
+
+        function updateXpSources() {
+            if (state.detectedBaseXp === null) {
+                baseAutoValue.textContent = "Open M → Identity";
+                baseAutoValue.classList.add("waiting");
+                baseXpHint.textContent = "Detected from Identity → Experience.";
+            } else {
+                baseAutoValue.textContent = `${fmt(state.detectedBaseXp, 1)}%`;
+                baseAutoValue.classList.remove("waiting");
+                baseXpHint.textContent = "Detected from Identity → Experience.";
+            }
+
+            if (state.detectedSotdBonus === null || !state.detectedSotdSkill) {
+                sotdAutoValue.textContent = "Open M → Identity";
+                sotdAutoValue.classList.add("waiting");
+                sotdHint.textContent = "Auto applies only when SOTD matches this calculator.";
+            } else {
+                const applies = sotdMatchesMode();
+                sotdAutoValue.textContent =
+                    `${state.detectedSotdSkill} +${fmt(state.detectedSotdBonus, 1)}%` +
+                    (applies ? " — Applied" : " — Not applied");
+                sotdAutoValue.classList.remove("waiting");
+
+                if (state.mode === "bear") {
+                    sotdHint.textContent = 'Bear calculator treats SOTD "Skill" as Hunting.';
+                } else {
+                    sotdHint.textContent = "Fishing SOTD is applied automatically.";
+                }
+            }
+        }
+
+        function parseMenuChoices(value) {
+            if (Array.isArray(value)) return value;
+
+            if (typeof value === "string") {
+                try {
+                    const parsed = JSON.parse(value);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {}
+            }
+
+            return [];
+        }
+
+        function cleanMenuText(value) {
+            return String(value ?? "").replace(/(<.+?>)|(&#.+?;)/g, "").trim();
+        }
+
+
+        function shouldTrackChest(chestId) {
+            const match = String(chestId || "").match(/^self_storage:(\d+):/i);
+
+            if (!match) return true;
+
+            const currentUserId = String(state.cache.user_id ?? "").trim();
+
+            if (!currentUserId) return true;
+
+            return match[1] === currentUserId;
+        }
+
+        function parseChest(raw) {
+            if (raw && typeof raw === "object") return raw;
+
+            if (typeof raw === "string") {
+                try {
+                    return JSON.parse(raw);
+                } catch {}
+            }
+
+            return {};
+        }
+
+        function chestAmount(chest, itemKey) {
+            const item = chest?.[itemKey];
+
+            if (item === undefined || item === null) return 0;
+            if (typeof item === "object" && "amount" in item) return num(item.amount);
+
+            return num(item);
+        }
+
+        function detectedStock() {
+            const itemKey = state.mode === "fish" ? "fish_meat" : "hide_bear";
+
+            return Object.values(state.scannedStorages)
+                .reduce((total, chest) => total + chestAmount(chest, itemKey), 0);
+        }
+
+        function stockForCalculation() {
+            const raw = stock.value.trim();
+            return raw === "" ? detectedStock() : Math.max(num(raw), 0);
+        }
+
+        function updateStorageDisplay() {
+            const count = Object.keys(state.scannedStorages).length;
+            const total = detectedStock();
+
+            detectedStockDisplay.textContent = fmt(total, 0);
+            if (loaderStockValue) loaderStockValue.textContent = fmt(total, 0);
+            if (loaderItemValue) loaderItemValue.textContent = state.mode === "fish" ? "Fish Meat" : "Brown Bears";
+            if (loaderItemLabel) loaderItemLabel.textContent = state.mode === "fish" ? "Selected Item" : "Selected Item";
+            storageCount.textContent = count
+                ? `${count} storage${count === 1 ? "" : "s"} scanned this session.`
+                : "Open a storage to scan it.";
+
+            autoStockLabel.textContent = state.mode === "fish"
+                ? "Fish Detected in Storage"
+                : "Bears Detected in Storage";
+        }
+
+        function capacityMultiplier() {
+            return 1
+                + (premium.checked ? 0.15 : 0)
+                + (farmersMilk.checked ? 0.20 : 0)
+                + (postop.checked ? 0.15 : 0);
+        }
+
+        function selectedLoadTargets() {
+            const targets = [];
+
+            if (trailerSelect.value && trailers[trailerSelect.value]) {
+                targets.push(trailers[trailerSelect.value]);
+            }
+
+            if (mk15.checked) {
+                targets.push(trailers.mk15);
+            }
+
+            return targets;
+        }
+
+        function updateLoaderSummary() {
+            const targets = selectedLoadTargets();
+
+            if (!targets.length) {
+                loaderSummary.textContent = "Select a trailer or MK15 to see the load capacity.";
+                return;
+            }
+
+            const multiplier = capacityMultiplier();
+            const capacities = targets.map(target => {
+                const kg = target.size * multiplier;
+                const rawUnits = state.mode === "fish"
+                    ? Math.floor(kg / 0.1)
+                    : Math.floor(kg / 20);
+
+                const loadUnits = state.mode === "fish"
+                    ? Math.floor(rawUnits / 10000) * 10000
+                    : rawUnits;
+
+                return { target, kg, rawUnits, loadUnits };
+            });
+
+            const totalKg = capacities.reduce((sum, entry) => sum + entry.kg, 0);
+            const rawUnits = capacities.reduce((sum, entry) => sum + entry.rawUnits, 0);
+            const loadUnits = capacities.reduce((sum, entry) => sum + entry.loadUnits, 0);
+            const targetNames = targets.map(target => target.name).join(" + ");
+            const itemName = state.mode === "fish" ? "normal fish" : "bears";
+
+            if (state.mode === "fish") {
+                loaderSummary.innerHTML =
+                    `<span class="small-value">${targetNames}</span> — ` +
+                    `${fmt(totalKg, 0)} kg adjusted capacity. Theoretical max ` +
+                    `<span class="small-value">${fmt(rawUnits, 0)} fish</span>; ` +
+                    `auto-loader will take <span class="small-value">${fmt(loadUnits, 0)} fish</span> ` +
+                    `in full 10,000-fish sale batches.`;
+            } else {
+                loaderSummary.innerHTML =
+                    `<span class="small-value">${targetNames}</span> — ` +
+                    `${fmt(totalKg, 0)} kg adjusted capacity, up to ` +
+                    `<span class="small-value">${fmt(loadUnits, 0)} ${itemName}</span> when empty. ` +
+                    `The game decides the actual maximum if the trunk already contains items.`;
+            }
+        }
+
+        function setLoaderStatus(message, type = "") {
+            loaderStatus.classList.remove("armed", "error");
+            if (type) loaderStatus.classList.add(type);
+            loaderStatus.innerHTML = message;
+        }
+
+        function setLoaderArmed(armed) {
+            state.loaderArmed = armed;
+            armLoaderBtn.classList.toggle("armed", armed);
+            armLoaderBtn.textContent = armed ? "Cancel Auto Loader" : "Arm Auto Loader";
+
+            if (armed) {
+                setLoaderStatus(
+                    `Armed for <strong>${state.mode === "fish" ? "Fish Meat" : "Brown Bears"}</strong>. ` +
+                    `Open the storage you want to load from.`,
+                    "armed"
+                );
+            } else if (!state.autoLoading) {
+                setLoaderStatus(
+                    `Keybind trigger: <strong>userapp_trigger ttload</strong>. ` +
+                    `Arm it, then open the storage containing the selected meat.`
+                );
+            }
+        }
+
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function waitFor(test, retries = 300, delay = 10) {
+            while (retries-- > 0) {
+                if (test()) {
+                    await wait(10);
+                    return true;
+                }
+
+                await wait(delay);
+            }
+
+            throw new Error("Timed out waiting for the in-game storage menu.");
+        }
+
+        function menuChoiceTexts() {
+            return (state.cache.menu_choices ?? [])
+                .map(choice => Array.isArray(choice) ? choice[0] : choice)
+                .filter(choice => choice != null);
+        }
+
+        function findMenuChoiceExact(label) {
+            return menuChoiceTexts().find(choice => cleanMenuText(choice) === label) ?? null;
+        }
+
+        function findTargetChoice(target) {
+            const choices = menuChoiceTexts();
+            const cleaned = choices.map(choice => ({
+                raw: choice,
+                text: cleanMenuText(choice),
+                lower: cleanMenuText(choice).toLowerCase()
+            }));
+
+            if (target.vrpName) {
+                const exact = cleaned.find(choice => choice.text === target.vrpName);
+                if (exact) return exact.raw;
+            }
+
+            const id = target.id.toLowerCase();
+            const name = target.name.toLowerCase();
+
+            const idMatch = cleaned.find(choice =>
+                choice.lower.includes(`(${id})`) ||
+                choice.lower.endsWith(` ${id}`) ||
+                choice.lower === id
+            );
+            if (idMatch) return idMatch.raw;
+
+            const mkMatch = cleaned.find(choice => choice.lower.includes(name));
+            if (mkMatch) return mkMatch.raw;
+
+            if (cleaned.length === 1) {
+                return cleaned[0].raw;
+            }
+
+            return null;
+        }
+
+        async function chooseMenu(choice, mod = 0) {
+            const beforeMenu = state.cache.menu;
+            const beforeOpen = state.cache.menu_open;
+            const beforePrompt = state.cache.prompt;
+            const beforeChoices = JSON.stringify(state.cache.menu_choices);
+
+            send({
+                type: "forceMenuChoice",
+                choice,
+                mod
+            });
+
+            try {
+                await waitFor(
+                    () =>
+                        beforeMenu !== state.cache.menu ||
+                        beforeOpen !== state.cache.menu_open ||
+                        beforePrompt !== state.cache.prompt ||
+                        beforeChoices !== JSON.stringify(state.cache.menu_choices),
+                    200,
+                    8
+                );
+            } catch {
+                // Some menu actions do not visibly change every cached field.
+                await wait(80);
+            }
+        }
+
+        async function menuBack() {
+            send({ type: "forceMenuBack" });
+            await wait(80);
+        }
+
+        async function submitAmount(value) {
+            await waitFor(() => state.cache.prompt, 150, 20);
+            send({
+                type: "forceSubmitValue",
+                value: String(Math.floor(value))
+            });
+            await wait(100);
+        }
+
+        function targetLoadAmount(target) {
+            const kg = target.size * capacityMultiplier();
+
+            if (state.mode === "fish") {
+                const fishCapacity = Math.floor(kg / 0.1);
+                return Math.floor(fishCapacity / 10000) * 10000;
+            }
+
+            return Math.floor(kg / 20);
+        }
+
+        async function loadIntoTarget(target, itemName) {
+            await waitFor(() => {
+                return state.cache.menu_open && findMenuChoiceExact("Take to Trunk");
+            });
+
+            await chooseMenu(findMenuChoiceExact("Take to Trunk"));
+
+            await waitFor(() => state.cache.menu_open && findTargetChoice(target));
+            const targetChoice = findTargetChoice(target);
+
+            if (!targetChoice) {
+                throw new Error(`Could not find ${target.name} in the Take to Trunk menu.`);
+            }
+
+            await chooseMenu(targetChoice);
+
+            await waitFor(() => state.cache.menu_open && findMenuChoiceExact(itemName));
+            const itemChoice = findMenuChoiceExact(itemName);
+
+            if (!itemChoice) {
+                throw new Error(`${itemName} was not found in the storage menu.`);
+            }
+
+            if (state.mode === "fish") {
+                const amount = targetLoadAmount(target);
+
+                if (amount <= 0) {
+                    throw new Error(`${target.name} does not have room for a full 10,000-fish sale batch.`);
+                }
+
+                await chooseMenu(itemChoice, 0);
+                await submitAmount(amount);
+            } else {
+                await chooseMenu(itemChoice, -1);
+                await wait(100);
+            }
+
+            if (state.cache.menu_open) {
+                await menuBack();
+            }
+        }
+
+        async function runAutoLoad(chestId, chest) {
+            if (!state.loaderArmed || state.autoLoading) return;
+
+            const itemKey = state.mode === "fish" ? "fish_meat" : "hide_bear";
+            const itemName = state.mode === "fish" ? "Fish Meat" : "Hunting: Brown Bear";
+            const amount = chestAmount(chest, itemKey);
+            const targets = selectedLoadTargets();
+
+            if (amount <= 0) {
+                setLoaderStatus(
+                    `Storage opened, but it contains no <strong>${itemName}</strong>. Still armed.`,
+                    "armed"
+                );
+                return;
+            }
+
+            if (!targets.length) {
+                setLoaderArmed(false);
+                setLoaderStatus("Select a trailer and/or MK15 before using the auto loader.", "error");
+                return;
+            }
+
+            state.autoLoading = true;
+            setLoaderStatus(
+                `Found <strong>${fmt(amount, 0)} ${itemName}</strong>. Loading ${targets.map(t => t.name).join(" + ")}...`,
+                "armed"
+            );
+
+            try {
+                for (const target of targets) {
+                    await loadIntoTarget(target, itemName);
+                }
+
+                setLoaderStatus(
+                    `Load sequence completed for <strong>${targets.map(t => t.name).join(" + ")}</strong>.`
+                );
+                state.loaderArmed = false;
+                armLoaderBtn.classList.remove("armed");
+                armLoaderBtn.textContent = "Arm Auto Loader";
+            } catch (error) {
+                setLoaderStatus(
+                    `Auto load stopped: <strong>${error.message}</strong>`,
+                    "error"
+                );
+                state.loaderArmed = false;
+                armLoaderBtn.classList.remove("armed");
+                armLoaderBtn.textContent = "Arm Auto Loader";
+            } finally {
+                state.autoLoading = false;
+            }
+        }
+
+        function calculateFish(targetXp, current, xpBonus, usingBxp, availableBxp) {
+            const remaining = Math.max(targetXp - current, 0);
+            const fishPerSale = 10000;
+            const baseXpPerSale = 50;
+            const bxpUsedPerSale = 500;
+
+            if (remaining <= 0) {
+                return { xpRemaining: 0, resource: 0, totalBxp: 0, bxpNeeded: 0, units: 0 };
+            }
+
+            const xpNoBonus = baseXpPerSale * (1 + xpBonus / 100);
+            const xpWithBonus = xpNoBonus * 2;
+            const salesWithBonus = Math.floor(availableBxp / bxpUsedPerSale);
+            const xpCoveredByBonusSales = salesWithBonus * xpWithBonus;
+
+            let salesRemaining;
+
+            if (usingBxp && xpCoveredByBonusSales >= remaining) {
+                salesRemaining = Math.ceil(remaining / xpWithBonus);
+            } else if (usingBxp) {
+                const xpLeftAfterBonus = remaining - xpCoveredByBonusSales;
+                salesRemaining = salesWithBonus + Math.ceil(xpLeftAfterBonus / xpNoBonus);
+            } else {
+                salesRemaining = Math.ceil(remaining / xpNoBonus);
+            }
+
+            const salesIfAllBonus = Math.ceil(remaining / xpWithBonus);
+            const totalBxp = salesIfAllBonus * bxpUsedPerSale;
+
+            return {
+                xpRemaining: remaining,
+                resource: salesRemaining * fishPerSale,
+                totalBxp,
+                bxpNeeded: Math.max(totalBxp - availableBxp, 0),
+                units: salesRemaining
+            };
+        }
+
+        function calculateBear(targetXp, current, xpBonus, usingBxp, availableBxp) {
+            const remaining = Math.max(targetXp - current, 0);
+            const baseBearXp = 6;
+            const bxpUsedPerBear = 60;
+
+            if (remaining <= 0) {
+                return { xpRemaining: 0, resource: 0, totalBxp: 0, bxpNeeded: 0, units: 0 };
+            }
+
+            const xpNoBonus = baseBearXp * (1 + xpBonus / 100);
+            const xpWithBonus = xpNoBonus * 2;
+            const bearsWithBonus = Math.floor(availableBxp / bxpUsedPerBear);
+            const xpCoveredByBonusBears = bearsWithBonus * xpWithBonus;
+
+            let bearsRemaining;
+
+            if (usingBxp && xpCoveredByBonusBears >= remaining) {
+                bearsRemaining = Math.ceil(remaining / xpWithBonus);
+            } else if (usingBxp) {
+                const xpLeftAfterBonus = remaining - xpCoveredByBonusBears;
+                bearsRemaining = bearsWithBonus + Math.ceil(xpLeftAfterBonus / xpNoBonus);
+            } else {
+                bearsRemaining = Math.ceil(remaining / xpNoBonus);
+            }
+
+            const bearsIfAllBonus = Math.ceil(remaining / xpWithBonus);
+            const totalBxp = bearsIfAllBonus * bxpUsedPerBear;
+
+            return {
+                xpRemaining: remaining,
+                resource: bearsRemaining,
+                totalBxp,
+                bxpNeeded: Math.max(totalBxp - availableBxp, 0),
+                units: bearsRemaining
+            };
+        }
+
+        function recalc() {
+            const targetXp = num(target.value);
+            const current = currentXp();
+            const xpBonus = selectedBaseXp() + selectedSotdBonus();
+            const availableBxp = selectedBxp();
+            const currentStock = stockForCalculation();
+
+            const result = state.mode === "fish"
+                ? calculateFish(targetXp, current, xpBonus, state.useBxp, availableBxp)
+                : calculateBear(targetXp, current, xpBonus, state.useBxp, availableBxp);
+
+            const shortage = Math.max(result.resource - currentStock, 0);
+
+            targetResult.textContent = fmt(targetXp, 0);
+            currentResult.textContent = fmt(Math.round(current), 0);
+            xpRemainingEl.textContent = fmt(Math.round(result.xpRemaining), 0);
+
+            totalResource.textContent = fmt(result.resource, 0);
+            stillNeeded.textContent = fmt(shortage, 0);
+
+            bxpResult.textContent = fmt(availableBxp, 0);
+            totalBxpEl.textContent = fmt(result.totalBxp, 0);
+            bxpNeededEl.textContent = fmt(result.bxpNeeded, 0);
+
+            if (state.mode === "fish") {
+                totalResourceLabel.textContent = "Total Fish Needed";
+                stillNeededLabel.textContent = "Fish Still Needed";
+                resourceSub.textContent = `${fmt(result.units, 0)} sale${result.units === 1 ? "" : "s"} of 10,000 fish`;
+            } else {
+                totalResourceLabel.textContent = "Total Bears Needed";
+                stillNeededLabel.textContent = "Bears Still Needed";
+                resourceSub.textContent = "Before deducting your current bear stock";
+            }
+
+            if (targetXp <= current) {
+                warning.style.display = "block";
+                warning.textContent = "You have already reached this target.";
+            } else {
+                warning.style.display = "none";
+            }
+
+        }
+
+        function applyMode(mode) {
+            state.mode = mode;
+            calcWorkspace.style.display = "grid";
+            loaderWorkspace.classList.remove("active");
+
+            document.querySelectorAll(".tab").forEach(tab => {
+                tab.classList.toggle("active", tab.dataset.mode === mode);
+            });
+
+            if (mode === "fish") {
+                autoXpLabel.textContent = "Current Fish XP";
+                autoBxpLabel.textContent = "Fishing BXP Available";
+                stockLabel.textContent = "Fish Stock Override (optional)";
+                stockHint.textContent = "Leave empty to use normal Fish Meat detected from opened storages.";
+                updateXpSources();
+            } else {
+                autoXpLabel.textContent = "Current Hunting XP";
+                autoBxpLabel.textContent = "Hunting BXP Available";
+                stockLabel.textContent = "Bear Stock Override (optional)";
+                stockHint.textContent = "Leave empty to use Brown Bears detected from opened storages.";
+                updateXpSources();
+            }
+
+            currentXpDisplay.textContent = fmt(Math.round(currentXp()), 0);
+            bxpDisplay.textContent = fmt(detectedBxp(), 0);
+            updateStorageDisplay();
+            updateLoaderSummary();
+            updateXpSources();
+
+            recalc();
+        }
+
+        function showLoaderTab() {
+            calcWorkspace.style.display = "none";
+            loaderWorkspace.classList.add("active");
+
+            document.querySelectorAll(".tab").forEach(tab => {
+                tab.classList.toggle("active", tab.dataset.page === "loader");
+            });
+
+            updateStorageDisplay();
+            updateLoaderSummary();
+            recalc();
+        }
+
+        function requestData() {
+            send({
+                type: "getNamedData",
+                keys: [
+                    "user_id",
+                    "inventory",
+                    "exp_hunting_skill",
+                    "exp_farming_fishing",
+                    "menu",
+                    "menu_open",
+                    "menu_choice",
+                    "menu_choices",
+                    "prompt",
+                    "chest"
+                ]
+            });
+        }
+
+        window.addEventListener("message", event => {
+            const evt = event.data;
+
+            if (!evt || typeof evt !== "object" || !evt.data || typeof evt.data !== "object") {
+                return;
+            }
+
+            const data = evt.data;
+
+            const triggerEntries = Object.entries(data).filter(([key]) => key.startsWith("trigger_"));
+            if (triggerEntries.length) {
+                const debugEl = document.getElementById("keybindDebugStatus");
+                if (debugEl) {
+                    debugEl.innerHTML = `<strong>Keybind debug:</strong> ${triggerEntries
+                        .map(([key, value]) => `${key} = ${String(value)}`)
+                        .join(" | ")}`;
+                }
+                console.log("[TT Keybind Debug]", Object.fromEntries(triggerEntries));
+            }
+
+            if ("user_id" in data) {
+                state.cache.user_id = data.user_id;
+            }
+
+            if ("inventory" in data) {
+                state.inventory = parseInventory(data.inventory);
+            }
+
+            if ("exp_hunting_skill" in data) {
+                state.huntingXp = num(data.exp_hunting_skill);
+            }
+
+            if ("exp_farming_fishing" in data) {
+                state.fishingXp = num(data.exp_farming_fishing);
+            }
+
+            if ("menu" in data) state.cache.menu = data.menu ?? "";
+            if ("menu_open" in data) state.cache.menu_open = !!data.menu_open;
+            if ("menu_choices" in data) {
+                state.cache.menu_choices = parseMenuChoices(data.menu_choices);
+                parseIdentityExperience(state.cache.menu_choices);
+            }
+            if ("prompt" in data) state.cache.prompt = !!data.prompt;
+            if ("chest" in data) {
+                // Generic chest is an open/close signal, not a storage snapshot.
+                state.cache.chest = data.chest;
+            }
+
+            if ("trigger_ttload" in data && data.trigger_ttload !== state.lastTrigger) {
+                state.lastTrigger = data.trigger_ttload;
+                setLoaderArmed(!state.loaderArmed);
+            }
+
+            for (const [key, value] of Object.entries(data)) {
+                if (!key.startsWith("chest_")) continue;
+
+                const chestId = key.slice(6);
+                const parsed = parseChest(value);
+
+                if (!parsed || typeof parsed !== "object") continue;
+
+                if (!shouldTrackChest(chestId)) {
+                    delete state.scannedStorages[chestId];
+                    updateStorageDisplay();
+                    recalc();
+                    continue;
+                }
+
+                // Same chestId = same logical storage. Replace its old snapshot
+                // so reopening a storage refreshes the amount instead of duplicating it.
+                state.scannedStorages[chestId] = parsed;
+                updateStorageDisplay();
+                recalc();
+
+                if (state.loaderArmed) {
+                    setTimeout(() => runAutoLoad(chestId, parsed), 80);
+                }
+            }
+
+            status.classList.add("connected");
+            statusText.textContent = "Game data connected";
+
+            const now = new Date();
+            lastUpdated.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+
+            currentXpDisplay.textContent = fmt(Math.round(currentXp()), 0);
+            bxpDisplay.textContent = fmt(detectedBxp(), 0);
+            recalc();
+        });
+
+        document.querySelectorAll(".tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                if (tab.dataset.page === "loader") {
+                    showLoaderTab();
+                    return;
+                }
+
+                applyMode(tab.dataset.mode);
+            });
+        });
+
+        toggle.addEventListener("click", () => {
+            state.useBxp = !state.useBxp;
+            toggle.classList.toggle("on", state.useBxp);
+            toggle.querySelector("span").textContent = state.useBxp ? "Yes" : "No";
+            recalc();
+        });
+
+
+        baseAutoBtn.addEventListener("click", () => setSourceMode("base", "auto"));
+        baseManualBtn.addEventListener("click", () => setSourceMode("base", "manual"));
+        sotdAutoBtn.addEventListener("click", () => setSourceMode("sotd", "auto"));
+        sotdManualBtn.addEventListener("click", () => setSourceMode("sotd", "manual"));
+
+        armLoaderBtn.addEventListener("click", () => {
+            if (state.autoLoading) return;
+            setLoaderArmed(!state.loaderArmed);
+        });
+
+        document.getElementById("clearStorageBtn").addEventListener("click", () => {
+            state.scannedStorages = {};
+            updateStorageDisplay();
+            recalc();
+            setLoaderStatus("Scanned storage totals cleared. Open a storage to scan it again.");
+        });
+
+        [trailerSelect, mk15, premium, farmersMilk].forEach(control => {
+            control.addEventListener("change", updateLoaderSummary);
+        });
+
+        [target, baseXp, sotdBonus, bxpOverride, stock].forEach(control => {
+            control.addEventListener("input", recalc);
+            control.addEventListener("change", recalc);
+        });
+
+        document.getElementById("calculateBtn").addEventListener("click", recalc);
+
+        document.getElementById("resetBtn").addEventListener("click", () => {
+            target.value = "1000000";
+            baseXp.value = "0";
+            sotdBonus.value = "0";
+            setSourceMode("base", "auto");
+            setSourceMode("sotd", "auto");
+            bxpOverride.value = "";
+            stock.value = "";
+            state.useBxp = true;
+            toggle.classList.add("on");
+            toggle.querySelector("span").textContent = "Yes";
+            recalc();
+        });
+
+        document.getElementById("pinBtn").addEventListener("click", () => send({ type: "pin" }));
+        parkBtn.addEventListener("click", togglePark);
+        document.getElementById("closeBtn").addEventListener("click", () => send({ type: "close" }));
+
+        window.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                send({ type: "pin" });
+            }
+        });
+
+        let parked = false;
+        let parkedFrom = null;
+
+        const windowStateKey = "ttCalculatorWindow";
+
+        function saveWindowState() {
+            if (parked) return;
+
+            localStorage.setItem(windowStateKey, JSON.stringify({
+                left: app.offsetLeft,
+                top: app.offsetTop,
+                width: app.offsetWidth,
+                height: app.offsetHeight
+            }));
+        }
+
+        function restoreWindowState() {
+            let saved;
+
+            try {
+                saved = JSON.parse(localStorage.getItem(windowStateKey));
+            } catch {
+                return;
+            }
+
+            if (!saved) return;
+
+            const minWidth = 760;
+            const minHeight = 560;
+            const width = Math.min(Math.max(num(saved.width, app.offsetWidth), minWidth), window.innerWidth);
+            const height = Math.min(Math.max(num(saved.height, app.offsetHeight), minHeight), window.innerHeight);
+
+            app.style.width = `${width}px`;
+            app.style.height = `${height}px`;
+
+            const next = clampParkable(
+                num(saved.left, app.offsetLeft),
+                num(saved.top, app.offsetTop)
+            );
+
+            app.style.left = `${next.left}px`;
+            app.style.top = `${next.top}px`;
+        }
+
+        function parkableBounds() {
+            const visible = 54;
+
+            return {
+                minLeft: -app.offsetWidth + visible,
+                maxLeft: window.innerWidth - visible,
+                minTop: -app.offsetHeight + visible,
+                maxTop: window.innerHeight - visible
+            };
+        }
+
+        function clampParkable(left, top) {
+            const bounds = parkableBounds();
+
+            return {
+                left: Math.min(bounds.maxLeft, Math.max(bounds.minLeft, left)),
+                top: Math.min(bounds.maxTop, Math.max(bounds.minTop, top))
+            };
+        }
+
+        function togglePark() {
+            if (parked) {
+                if (parkedFrom) {
+                    app.style.left = `${parkedFrom.left}px`;
+                    app.style.top = `${parkedFrom.top}px`;
+                }
+
+                parked = false;
+                parkedFrom = null;
+                parkBtn.textContent = "▾ Hide";
+                return;
+            }
+
+            parkedFrom = {
+                left: app.offsetLeft,
+                top: app.offsetTop
+            };
+
+            const left = Math.min(
+                Math.max(app.offsetLeft, 0),
+                Math.max(window.innerWidth - app.offsetWidth, 0)
+            );
+
+            app.style.left = `${left}px`;
+            app.style.top = `${window.innerHeight - 54}px`;
+
+            parked = true;
+            parkBtn.textContent = "▴ Show";
+        }
+
+        let dragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let appStartX = 0;
+        let appStartY = 0;
+
+        titlebar.addEventListener("mousedown", event => {
+            if (event.target.closest("button")) return;
+
+            dragging = true;
+            dragStartX = event.clientX;
+            dragStartY = event.clientY;
+            appStartX = app.offsetLeft;
+            appStartY = app.offsetTop;
+            event.preventDefault();
+        });
+
+        let resizing = false;
+        let resizeStartX = 0;
+        let resizeStartY = 0;
+        let resizeStartWidth = 0;
+        let resizeStartHeight = 0;
+
+        resizeHandle.addEventListener("mousedown", event => {
+            resizing = true;
+            resizeStartX = event.clientX;
+            resizeStartY = event.clientY;
+            resizeStartWidth = app.offsetWidth;
+            resizeStartHeight = app.offsetHeight;
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        window.addEventListener("mousemove", event => {
+            if (dragging) {
+                const next = clampParkable(
+                    appStartX + event.clientX - dragStartX,
+                    appStartY + event.clientY - dragStartY
+                );
+
+                app.style.left = `${next.left}px`;
+                app.style.top = `${next.top}px`;
+
+                if (parked) {
+                    parked = false;
+                    parkedFrom = null;
+                    parkBtn.textContent = "▾ Hide";
+                }
+            }
+
+            if (resizing) {
+                const maxWidth = Math.max(window.innerWidth - app.offsetLeft, 760);
+                const maxHeight = Math.max(window.innerHeight - app.offsetTop, 560);
+
+                const nextWidth = Math.min(
+                    Math.max(resizeStartWidth + event.clientX - resizeStartX, 760),
+                    maxWidth
+                );
+
+                const nextHeight = Math.min(
+                    Math.max(resizeStartHeight + event.clientY - resizeStartY, 560),
+                    maxHeight
+                );
+
+                app.style.width = `${nextWidth}px`;
+                app.style.height = `${nextHeight}px`;
+            }
+        });
+
+        window.addEventListener("mouseup", () => {
+            const changed = dragging || resizing;
+            dragging = false;
+            resizing = false;
+
+            if (changed) saveWindowState();
+        });
+
+        window.addEventListener("resize", () => {
+            if (parked) {
+                app.style.top = `${window.innerHeight - 54}px`;
+                return;
+            }
+
+            const next = clampParkable(app.offsetLeft, app.offsetTop);
+            app.style.left = `${next.left}px`;
+            app.style.top = `${next.top}px`;
+        });
+
+        window.addEventListener("load", () => {
+            restoreWindowState();
+            setSourceMode("base", "auto");
+            setSourceMode("sotd", "auto");
+            applyMode("fish");
+            updateStorageDisplay();
+            updateLoaderSummary();
+            requestData();
+            setInterval(requestData, 60000);
+        });
+    </script>
+</body>
+</html>
