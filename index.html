@@ -2108,6 +2108,47 @@
         let parked = false;
         let parkedFrom = null;
 
+        const windowStateKey = "ttCalculatorWindow";
+
+        function saveWindowState() {
+            if (parked) return;
+
+            localStorage.setItem(windowStateKey, JSON.stringify({
+                left: app.offsetLeft,
+                top: app.offsetTop,
+                width: app.offsetWidth,
+                height: app.offsetHeight
+            }));
+        }
+
+        function restoreWindowState() {
+            let saved;
+
+            try {
+                saved = JSON.parse(localStorage.getItem(windowStateKey));
+            } catch {
+                return;
+            }
+
+            if (!saved) return;
+
+            const minWidth = 760;
+            const minHeight = 560;
+            const width = Math.min(Math.max(num(saved.width, app.offsetWidth), minWidth), window.innerWidth);
+            const height = Math.min(Math.max(num(saved.height, app.offsetHeight), minHeight), window.innerHeight);
+
+            app.style.width = `${width}px`;
+            app.style.height = `${height}px`;
+
+            const next = clampParkable(
+                num(saved.left, app.offsetLeft),
+                num(saved.top, app.offsetTop)
+            );
+
+            app.style.left = `${next.left}px`;
+            app.style.top = `${next.top}px`;
+        }
+
         function parkableBounds() {
             const visible = 54;
 
@@ -2228,8 +2269,11 @@
         });
 
         window.addEventListener("mouseup", () => {
+            const changed = dragging || resizing;
             dragging = false;
             resizing = false;
+
+            if (changed) saveWindowState();
         });
 
         window.addEventListener("resize", () => {
@@ -2244,6 +2288,7 @@
         });
 
         window.addEventListener("load", () => {
+            restoreWindowState();
             setSourceMode("base", "auto");
             setSourceMode("sotd", "auto");
             applyMode("fish");
