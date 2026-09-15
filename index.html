@@ -1085,7 +1085,7 @@
                         </div>
 
                         <div class="loader-status" id="loaderStatus">
-                            Keybind: <strong>(user-apps) DTC Execute</strong>. Arm the loader, then use the keybind.
+                            Keybind trigger: <strong>userapp_trigger ttload</strong>. Arm it, then open the storage containing the selected meat.
                         </div>
                     </div>
                 </div>
@@ -1992,8 +1992,8 @@
                 state.cache.chest = data.chest;
             }
 
-            if ("trigger_circle" in data && data.trigger_circle !== state.lastTrigger) {
-                state.lastTrigger = data.trigger_circle;
+            if ("trigger_ttload" in data && data.trigger_ttload !== state.lastTrigger) {
+                state.lastTrigger = data.trigger_ttload;
                 setLoaderArmed(!state.loaderArmed);
             }
 
