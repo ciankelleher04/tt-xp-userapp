@@ -1799,6 +1799,8 @@
             }
         }
 
+        window.addEventListener("message", (event) => {
+            const data = event.data ?? {};
 
             if ("inventory" in data) {
                 state.inventory = parseInventory(data.inventory);
