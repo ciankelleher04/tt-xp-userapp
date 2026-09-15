@@ -1722,6 +1722,39 @@
             }
         }
 
+        async function prepareLoadMenu() {
+            if (state.cache.menu_open && findMenuChoiceExact("Take to Trunk")) {
+                const openStorage = findMenuChoiceExact("Open Storage");
+
+                if (openStorage) {
+                    await chooseMenu(openStorage);
+
+                    await waitFor(
+                        () => state.cache.menu_open && !findMenuChoiceExact("Open Storage"),
+                        150,
+                        20
+                    );
+
+                    await wait(120);
+                    await menuBack();
+                    await wait(120);
+
+                    send({
+                        type: "sendCommand",
+                        command: "rm_trunk"
+                    });
+
+                    await wait(200);
+                }
+            }
+
+            await waitFor(
+                () => state.cache.menu_open && !!findMenuChoiceExact("Take to Trunk"),
+                150,
+                30
+            );
+        }
+
         async function runAutoLoad() {
             if (!state.loaderArmed || state.autoLoading) return;
 
@@ -1741,8 +1774,8 @@
             );
 
             try {
-                // Start directly from the normal storage interaction menu. This mirrors
-                // DTC's action path: Take to Trunk -> target storage -> item -> amount.
+                await prepareLoadMenu();
+
                 for (const target of targets) {
                     await loadIntoTarget(target, itemName);
                 }
@@ -1802,7 +1835,7 @@
                         setTimeout(() => runAutoLoad(), 0);
                     } else {
                         setLoaderStatus(
-                            `Open the storage interaction menu first so <strong>Take to Trunk</strong> is visible, then press DTC Execute.`,
+                            `Open the storage interaction menu, then press DTC Execute.`,
                             "error"
                         );
                     }
