@@ -1994,7 +1994,22 @@
 
             if ("trigger_dtctake" in data && data.trigger_dtctake !== state.lastTrigger) {
                 state.lastTrigger = data.trigger_dtctake;
-                setLoaderArmed(!state.loaderArmed);
+
+                // If the storage interaction menu is already open, start immediately
+                // instead of waiting for another chest update.
+                const takeChoice = findMenuChoiceExact("Take to Trunk");
+                const scannedEntries = Object.entries(state.scannedStorages);
+                const currentStorage = scannedEntries.length
+                    ? scannedEntries[scannedEntries.length - 1]
+                    : null;
+
+                if (!state.autoLoading && state.cache.menu_open && takeChoice && currentStorage) {
+                    const [chestId, chest] = currentStorage;
+                    setLoaderArmed(true);
+                    setTimeout(() => runAutoLoad(chestId, chest), 0);
+                } else if (!state.autoLoading) {
+                    setLoaderArmed(!state.loaderArmed);
+                }
             }
 
             for (const [key, value] of Object.entries(data)) {
