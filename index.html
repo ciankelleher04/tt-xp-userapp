@@ -1992,8 +1992,8 @@
                 state.cache.chest = data.chest;
             }
 
-            if ("trigger_dtctake" in data && data.trigger_dtctake !== state.lastTrigger) {
-                state.lastTrigger = data.trigger_dtctake;
+            if ("trigger_circle" in data && data.trigger_circle !== state.lastTrigger) {
+                state.lastTrigger = data.trigger_circle;
 
                 // If the storage interaction menu is already open, start immediately
                 // instead of waiting for another chest update.
