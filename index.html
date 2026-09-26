@@ -1994,18 +1994,18 @@
             }
 
             if ("trigger_circle" in data && data.trigger_circle !== state.lastTrigger) {
-    state.lastTrigger = data.trigger_circle;
+                state.lastTrigger = data.trigger_circle;
 
-    const nextArmed = !state.loaderArmed;
-    setLoaderArmed(nextArmed);
+                const nextArmed = !state.loaderArmed;
+                setLoaderArmed(nextArmed);
 
-    if (nextArmed) {
-        for (const [chestId, chest] of Object.entries(state.scannedStorages)) {
-            if (!state.loaderArmed) break;
-            setTimeout(() => runAutoLoad(chestId, chest), 80);
-        }
-    }
-}
+                if (nextArmed) {
+                for (const [chestId, chest] of Object.entries(state.scannedStorages)) {
+                if (!state.loaderArmed) break;
+                    setTimeout(() => runAutoLoad(chestId, chest), 80);
+                    }
+                    }
+            }
 
             for (const [key, value] of Object.entries(data)) {
                 if (!key.startsWith("chest_")) continue;
