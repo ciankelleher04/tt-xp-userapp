@@ -2192,6 +2192,10 @@
                 top: app.offsetTop
             };
 
+            // Save the normal window position before moving it into the hidden/parked position.
+            // This makes the position survive leaving and rejoining the game after pressing Hide.
+            saveWindowState();
+
             const left = Math.min(
                 Math.max(app.offsetLeft, 0),
                 Math.max(window.innerWidth - app.offsetWidth, 0)
