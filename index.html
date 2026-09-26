@@ -1324,7 +1324,6 @@
                 return skill === "fishing";
             }
 
-            // Transport Tycoon exposes the Hunting job/skill as "skill" in several data keys.
             return skill === "hunting" || skill === "skill";
         }
 
@@ -1650,7 +1649,6 @@
                     8
                 );
             } catch {
-                // Some menu actions do not visibly change every cached field.
                 await wait(80);
             }
         }
@@ -1989,7 +1987,6 @@
             }
             if ("prompt" in data) state.cache.prompt = !!data.prompt;
             if ("chest" in data) {
-                // Generic chest is an open/close signal, not a storage snapshot.
                 state.cache.chest = data.chest;
             }
 
@@ -2022,8 +2019,6 @@
                     continue;
                 }
 
-                // Same chestId = same logical storage. Replace its old snapshot
-                // so reopening a storage refreshes the amount instead of duplicating it.
                 state.scannedStorages[chestId] = parsed;
                 updateStorageDisplay();
                 recalc();
