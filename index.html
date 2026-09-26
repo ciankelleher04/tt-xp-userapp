@@ -2116,13 +2116,13 @@
         const windowStateKey = "ttCalculatorWindow";
 
         function saveWindowState() {
-            if (parked) return;
-
             localStorage.setItem(windowStateKey, JSON.stringify({
                 left: app.offsetLeft,
                 top: app.offsetTop,
                 width: app.offsetWidth,
-                height: app.offsetHeight
+                height: app.offsetHeight,
+                parked,
+                parkedFrom
             }));
         }
 
@@ -2152,6 +2152,12 @@
 
             app.style.left = `${next.left}px`;
             app.style.top = `${next.top}px`;
+
+            parked = saved.parked === true;
+            parkedFrom = saved.parkedFrom && Number.isFinite(Number(saved.parkedFrom.left)) && Number.isFinite(Number(saved.parkedFrom.top))
+                ? { left: Number(saved.parkedFrom.left), top: Number(saved.parkedFrom.top) }
+                : null;
+            parkBtn.textContent = parked ? "▴ Show" : "▾ Hide";
         }
 
         function parkableBounds() {
@@ -2184,6 +2190,7 @@
                 parked = false;
                 parkedFrom = null;
                 parkBtn.textContent = "▾ Hide";
+                saveWindowState();
                 return;
             }
 
@@ -2191,11 +2198,6 @@
                 left: app.offsetLeft,
                 top: app.offsetTop
             };
-
-            // Persist the normal on-screen position BEFORE moving the app into
-            // its hidden/parked position. This is the position we want back
-            // after leaving and rejoining the server.
-            saveWindowState();
 
             const left = Math.min(
                 Math.max(app.offsetLeft, 0),
@@ -2207,6 +2209,7 @@
 
             parked = true;
             parkBtn.textContent = "▴ Show";
+            saveWindowState();
         }
 
         let dragging = false;
@@ -2285,11 +2288,6 @@
 
             if (changed) saveWindowState();
         });
-
-        // Extra persistence guard for normal closes/reloads. If the app is
-        // parked, saveWindowState() intentionally leaves the pre-hide state alone.
-        window.addEventListener("pagehide", saveWindowState);
-        window.addEventListener("beforeunload", saveWindowState);
 
         window.addEventListener("resize", () => {
             if (parked) {
