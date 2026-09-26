@@ -2192,8 +2192,9 @@
                 top: app.offsetTop
             };
 
-            // Save the normal window position before moving it into the hidden/parked position.
-            // This makes the position survive leaving and rejoining the game after pressing Hide.
+            // Persist the normal on-screen position BEFORE moving the app into
+            // its hidden/parked position. This is the position we want back
+            // after leaving and rejoining the server.
             saveWindowState();
 
             const left = Math.min(
@@ -2284,6 +2285,11 @@
 
             if (changed) saveWindowState();
         });
+
+        // Extra persistence guard for normal closes/reloads. If the app is
+        // parked, saveWindowState() intentionally leaves the pre-hide state alone.
+        window.addEventListener("pagehide", saveWindowState);
+        window.addEventListener("beforeunload", saveWindowState);
 
         window.addEventListener("resize", () => {
             if (parked) {
