@@ -2115,15 +2115,17 @@
 
         const windowStateKey = "ttCalculatorWindow";
 
-        function saveWindowState() {
-            localStorage.setItem(windowStateKey, JSON.stringify({
-                left: app.offsetLeft,
-                top: app.offsetTop,
-                width: app.offsetWidth,
-                height: app.offsetHeight,
-                parked,
-                parkedFrom
-            }));
+        function saveWindowState(overrides = {}) {
+            const stateToSave = {
+                left: overrides.left ?? app.offsetLeft,
+                top: overrides.top ?? app.offsetTop,
+                width: overrides.width ?? app.offsetWidth,
+                height: overrides.height ?? app.offsetHeight,
+                parked: overrides.parked ?? parked,
+                parkedFrom: overrides.parkedFrom ?? parkedFrom
+            };
+
+            localStorage.setItem(windowStateKey, JSON.stringify(stateToSave));
         }
 
         function restoreWindowState() {
@@ -2190,7 +2192,7 @@
                 parked = false;
                 parkedFrom = null;
                 parkBtn.textContent = "▾ Hide";
-                saveWindowState();
+                saveWindowState({ parked: false, parkedFrom: null });
                 return;
             }
 
@@ -2204,12 +2206,22 @@
                 Math.max(window.innerWidth - app.offsetWidth, 0)
             );
 
+            const parkedTop = window.innerHeight - 54;
+
             app.style.left = `${left}px`;
-            app.style.top = `${window.innerHeight - 54}px`;
+            app.style.top = `${parkedTop}px`;
 
             parked = true;
             parkBtn.textContent = "▴ Show";
-            saveWindowState();
+
+            // Save the exact parked destination directly. Do not rely on
+            // offsetLeft/offsetTop updating before FiveM/CEF persists state.
+            saveWindowState({
+                left,
+                top: parkedTop,
+                parked: true,
+                parkedFrom: { ...parkedFrom }
+            });
         }
 
         let dragging = false;
